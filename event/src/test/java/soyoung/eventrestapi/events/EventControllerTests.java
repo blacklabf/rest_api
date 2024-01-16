@@ -3,8 +3,10 @@ package soyoung.eventrestapi.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -27,6 +29,9 @@ public class EventControllerTests { // 단위테스트는 아님 (9강-2:40)
     @Autowired
     ObjectMapper objectMapper;
 
+    @MockBean
+    EventRepository eventRepository;
+
     @Test
     public void createEvent() throws Exception {
 
@@ -43,6 +48,8 @@ public class EventControllerTests { // 단위테스트는 아님 (9강-2:40)
                 .limitOfEnrollment(100)
                 .location("강남역")
                 .build();
+        event.setId(10);
+        Mockito.when(eventRepository.save(event)).thenReturn(event); // nullPointerException 방지
 
         mocMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
