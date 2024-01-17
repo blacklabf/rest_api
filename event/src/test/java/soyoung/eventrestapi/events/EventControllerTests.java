@@ -38,6 +38,16 @@ public class EventControllerTests { // 단위테스트는 아님 (9강-2:40)
     public void createEvent() throws Exception {
 
 
+        EventDto event = EventDto.builder().name("Spring").description("REST API Development with Spring").beginEnrollmentDateTime(LocalDateTime.of(2024, 01, 16, 14, 21)).closeEnrollmentDateTime(LocalDateTime.of(2024, 01, 17, 22, 40)).beginEventDateTime(LocalDateTime.of(2024, 01, 18, 11, 20)).endEventDateTime(LocalDateTime.of(2024, 01, 20, 11, 20)).basePrice(100).maxPrice(200).limitOfEnrollment(100).location("강남역").build();
+
+        mocMvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON).accept(MediaTypes.HAL_JSON).content(objectMapper.writeValueAsString(event))).andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("id").exists()).andExpect(header().exists(HttpHeaders.LOCATION)) // Location header 있는지 확인
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE)).andExpect(jsonPath("id").value(Matchers.not(100))).andExpect(jsonPath("free").value(Matchers.not(true))).andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
+    }
+
+
+    @Test
+    public void createEvent_Bad_Request() throws Exception {
+
         Event event = Event.builder()
                 .id(100)
                 .name("Spring")
@@ -52,13 +62,15 @@ public class EventControllerTests { // 단위테스트는 아님 (9강-2:40)
                 .location("강남역")
                 .free(true)
                 .offline(false)
+                .eventStatus(EventStatus.PUBLISHED)
                 .build();
 
-        mocMvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON).accept(MediaTypes.HAL_JSON).content(objectMapper.writeValueAsString(event))).andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("id").exists()).andExpect(header().exists(HttpHeaders.LOCATION)) // Location header 있는지 확인
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-                .andExpect(jsonPath("id").value(Matchers.not(100)))
-                .andExpect(jsonPath("free").value(Matchers.not(true)))
-                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+        mocMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
         ;
     }
 
